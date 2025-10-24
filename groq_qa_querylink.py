@@ -10,8 +10,6 @@ from uuid import uuid4
 import os
 import streamlit as st  
 
-print("ok")
-
 CHUNK_SIZE = 1000
 EMBEDDING_MODEL = "Alibaba-NLP/gte-base-en-v1.5"
 VECTORSTORE_DIR = Path(__file__).parent / "resources/vectorstore"
@@ -127,20 +125,3 @@ def generate_answer(query):
     )
 
     return formatted_output, clean_urls
-
-
-if __name__ == "__main__":
-    urls = [
-        "https://www.indiatoday.in/world/indians-abroad/story/22-year-old-indian-mbbs-student-airlifted-to-jaipur-after-brain-stroke-in-russia-2806343-2025-10-21",
-        "https://www.indiatoday.in/business/market/story/gold-silver-seeing-crash-why-reason-profit-booking-safe-haven-demand-easing-geopolitical-tensions-stronger-dollar-2807046-2025-10-23"
-    ]
-
-    process_urls(urls, force_refresh=True)
-
-    query = "Tell me, Gold, which touched around how much per ounce earlier this week, and silver, which reached how much per ounce ?"
-    answer, sources = generate_answer(query)
-
-    print("\n---------------------------")
-    print("ANSWER:\n", answer)
-    print("---------------------------")
-    print("SOURCES:\n", sources)
