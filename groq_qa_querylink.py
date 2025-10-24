@@ -1,4 +1,3 @@
-from dotenv import load_dotenv
 from pathlib import Path
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnableParallel, RunnablePassthrough
@@ -9,17 +8,30 @@ from langchain_groq import ChatGroq
 from langchain_huggingface.embeddings import HuggingFaceEmbeddings
 from uuid import uuid4
 import os
+import streamlit as st  
 
 print("ok")
 
-load_dotenv()
 CHUNK_SIZE = 1000
 EMBEDDING_MODEL = "Alibaba-NLP/gte-base-en-v1.5"
 VECTORSTORE_DIR = Path(__file__).parent / "resources/vectorstore"
 COLLECTION_NAME = "real_estate"
 
-llm = None
 vector_store = None
+llm = None
+
+if llm is None:
+    GROQ_API_KEY = st.secrets.get("GROQ_API_KEY") 
+    if not GROQ_API_KEY:
+        raise RuntimeError("Groq API key not found in Streamlit secrets.")
+
+    llm = ChatGroq(
+        model="llama-3.3-70b-versatile",
+        temperature=0.7,
+        max_tokens=600,
+        api_key=GROQ_API_KEY
+    )
+
 
 def initialize_components():
     """Initialize LLM and Vector Store if not already initialized."""
