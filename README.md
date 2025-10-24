@@ -38,8 +38,8 @@ QueryLink GroqQA demonstrates its ability to extract and process information fro
 - **Image 2**: The model accurately responds to a query based on [Piyush Goyal on Trade Talks with the US](https://www.indiatoday.in/business/story/do-not-do-deals-with-gun-to-our-head-piyush-goyal-on-trade-talks-with-us-2807857-2025-10-24).
 
 <div style="display: flex; justify-content: center; gap: 20px;">
-  <img src="https://github.com/user-attachments/assets/2c3af4d5-d3a7-4c56-b788-02bdccebd03c" alt="QueryLink GroqQA Example 1: Water Restriction Query" width="450" height="450">
-  <img src="https://github.com/user-attachments/assets/46dacff9-3e53-4cc3-ad28-8c0005be4284" alt="QueryLink GroqQA Example 2: Trade Talks Query" width="450" height="450">
+  <img src="https://github.com/user-attachments/assets/2c3af4d5-d3a7-4c56-b788-02bdccebd03c" alt="QueryLink GroqQA Example 1: Water Restriction Query" width="400" height="400">
+  <img src="https://github.com/user-attachments/assets/46dacff9-3e53-4cc3-ad28-8c0005be4284" alt="QueryLink GroqQA Example 2: Trade Talks Query" width="400" height="400">
 </div>
 
 ### Reference URLs
