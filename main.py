@@ -18,15 +18,14 @@ if process_url_button:
         status_placeholder.error("At least 1 URL is needed")
     else:
         try:
-            status_placeholder.info("Initializing embeddings.")
+            status_placeholder.info("Initializing embeddings...")
             time.sleep(0.5)
 
-            status_placeholder.info("Processing URLs and embedding documents.")
-            time.sleep(0.5)
-
+            message = process_urls(urls) 
             status_placeholder.success(message)
         except Exception as e:
             status_placeholder.error(f"Error processing URLs: {str(e)}")
+
 query = st.text_input("Question")
 
 if query:
