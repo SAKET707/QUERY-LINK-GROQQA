@@ -1,90 +1,66 @@
-from pathlib import Path
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.runnables import RunnableParallel, RunnablePassthrough
 from langchain_community.document_loaders import UnstructuredURLLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_chroma import Chroma
 from langchain_groq import ChatGroq
 from langchain_huggingface.embeddings import HuggingFaceEmbeddings
 from uuid import uuid4
-import os
-import streamlit as st  
+import streamlit as st
 
 CHUNK_SIZE = 1000
 EMBEDDING_MODEL = "Alibaba-NLP/gte-base-en-v1.5"
-VECTORSTORE_DIR = Path(__file__).parent / "resources/vectorstore"
 COLLECTION_NAME = "real_estate"
 
 vector_store = None
 llm = None
 
-if llm is None:
-    GROQ_API_KEY = st.secrets.get("GROQ_API_KEY") 
-    if not GROQ_API_KEY:
-        raise RuntimeError("Groq API key not found in Streamlit secrets.")
+GROQ_API_KEY = st.secrets.get("GROQ_API_KEY") 
+if not GROQ_API_KEY:
+    raise RuntimeError("Groq API key not found in Streamlit secrets.")
 
-    llm = ChatGroq(
-        model="llama-3.3-70b-versatile",
-        temperature=0.7,
-        max_tokens=600,
-        api_key=GROQ_API_KEY
+llm = ChatGroq(
+    model="llama-3.3-70b-versatile",
+    temperature=0.7,
+    max_tokens=600,
+    api_key=GROQ_API_KEY
+)
+
+def initialize_vector_store():
+    """Create a fresh vector store each session."""
+    ef = HuggingFaceEmbeddings(
+        model_name=EMBEDDING_MODEL,
+        model_kwargs={"trust_remote_code": True}
     )
 
+    global vector_store
+    vector_store = Chroma(
+        collection_name=COLLECTION_NAME,
+        embedding_function=ef
+    )
 
-def initialize_components():
-    """Initialize LLM and Vector Store if not already initialized."""
-    global llm, vector_store
-
-    if llm is None:
-        llm = ChatGroq(model="llama-3.3-70b-versatile", temperature=0.7, max_tokens=600)
-
-    if vector_store is None:
-        ef = HuggingFaceEmbeddings(
-            model_name=EMBEDDING_MODEL,
-            model_kwargs={"trust_remote_code": True}
-        )
-
-        vector_store = Chroma(
-            collection_name=COLLECTION_NAME,
-            embedding_function=ef,
-            persist_directory=str(VECTORSTORE_DIR)
-        )
-
-def process_urls(urls, force_refresh=False):
+def process_urls(urls):
     """
-    Load URLs and embed them into Chroma vector DB.
-    If data is already cached, skip re-embedding unless force_refresh=True.
+    Load URLs and embed them into Chroma vector DB (recomputed each session).
     """
-    yield("Initialize Components")
-    initialize_components()
+    initialize_vector_store()
+    loader = UnstructuredURLLoader(urls=urls)
+    data = loader.load()
 
-    if not VECTORSTORE_DIR.exists() or force_refresh:
-        yield("Resetting collection and embedding new data...")
-        vector_store.reset_collection()
+    text_splitter = RecursiveCharacterTextSplitter(
+        separators=["\n\n", "\n", ".", " "],
+        chunk_size=CHUNK_SIZE
+    )
+    docs = text_splitter.split_documents(data)
 
-        yield("Loading Data")
-        loader = UnstructuredURLLoader(urls=urls)
-        data = loader.load()
+    uuids = [str(uuid4()) for _ in range(len(docs))]
+    vector_store.add_documents(docs, ids=uuids)
 
-        yield("Splitting Text")
-        text_splitter = RecursiveCharacterTextSplitter(
-            separators=["\n\n", "\n", ".", " "],
-            chunk_size=CHUNK_SIZE
-        )
-        docs = text_splitter.split_documents(data)
-
-        yield("Add docs to vector DB")
-        uuids = [str(uuid4()) for _ in range(len(docs))]
-        vector_store.add_documents(docs, ids=uuids)
-        yield("Data embedded and cached.")
-    else:
-        yield("Using cached vector DB.")
-
+    return f"{len(docs)} documents embedded successfully!"
 
 def generate_answer(query):
     global vector_store, llm
     if vector_store is None:
-        raise RuntimeError("VectorDB not initialized. Run initialize_components().")
+        raise RuntimeError("VectorDB not initialized. Run process_urls() first.")
 
     retriever = vector_store.as_retriever()
     sources = retriever.invoke(query)
